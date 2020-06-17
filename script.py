@@ -7,27 +7,39 @@ Dependencies:
 """
 
 import json
+import logging
+from os import getenv
 from ssl import CERT_NONE
 from time import sleep
 
 import Adafruit_DHT
-
 from paho.mqtt import client as mqtt
 
-SENSOR = Adafruit_DHT.AM2302
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    datefmt='%Y/%m/%d %H:%M:%S')
+LOGGER = logging.getLogger()
+
+TOPIC = 'brewcast/history'
+SENSOR = Adafruit_DHT.DHT22
 PIN = 4
 
-HOST = '172.17.0.1'
-TOPIC = 'brewcast/history'
+host = getenv('HOST', 'eventbus')
+transport = getenv('TRANSPORT', 'tcp')
+port = getenv('PORT', 1883 if transport == 'tcp' else '443')
 
-# Create a websocket MQTT client
-client = mqtt.Client(transport='websockets')
-client.ws_set_options(path='/eventbus')
-client.tls_set(cert_reqs=CERT_NONE)
-client.tls_insecure_set(True)
+
+# Create an MQTT client
+client = mqtt.Client(transport=transport)
+
+if transport == 'websockets':
+    client.ws_set_options(path='/eventbus')
+    client.tls_set(cert_reqs=CERT_NONE)
+    client.tls_insecure_set(True)
 
 try:
-    client.connect(host=HOST, port=443)
+    client.connect_async(host=host, port=port)
     client.loop_start()
 
     while True:
@@ -35,11 +47,11 @@ try:
 
         humidity, temperature = Adafruit_DHT.read_retry(SENSOR, PIN)
         if None in (humidity, temperature):
-            print('Discarding values...')
+            LOGGER.warning('Discarding values')
             continue
 
         message = {
-            'key': 'dht22',
+            'key': 'humidity',
             'data': {
                 'humidity[%]': humidity,
                 'temperature[degC]': temperature,
@@ -47,7 +59,7 @@ try:
         }
 
         client.publish(TOPIC, json.dumps(message))
-        print(f'sent {message}')
+        LOGGER.info(f'{temperature:.2f}°C | {humidity:.2f}%')
 
 
 finally:
