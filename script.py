@@ -50,6 +50,14 @@ try:
             LOGGER.warning('Discarding values')
             continue
 
+        if not 0 <= humidity <= 100:
+            LOGGER.warning(f'Discarding invalid humidity of {humidity}')
+            continue
+
+        if not 0 <= temperature <= 50:
+            LOGGER.warning(f'Discarding invalid temperature of {temperature}')
+            continue
+
         message = {
             'key': 'humidity',
             'data': {
