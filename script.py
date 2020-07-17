@@ -21,7 +21,7 @@ logging.basicConfig(
     datefmt='%Y/%m/%d %H:%M:%S')
 LOGGER = logging.getLogger()
 
-TOPIC = 'brewcast/history'
+TOPIC = 'brewcast/history/humidity'
 SENSOR = Adafruit_DHT.DHT22
 PIN = 4
 
