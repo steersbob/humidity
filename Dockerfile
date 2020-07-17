@@ -14,4 +14,4 @@ RUN pip3 install --no-index --find-links=/wheeley paho-mqtt adafruit-DHT
 
 COPY script.py /app/script.py
 
-CMD ["python3", "/app/script.py"]
+CMD ["python3", "-u", "/app/script.py"]
